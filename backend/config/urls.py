@@ -1,33 +1,35 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path, reverse_lazy
+from django.views.generic.base import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework.routers import DefaultRouter
+
+from backend.users.views import UserCreateViewSet, UserViewSet
+
+router = DefaultRouter()
+router.register(r"users", UserViewSet)
+router.register(r"users", UserCreateViewSet)
 
 urlpatterns = [
-    # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
-    # User management
-    # path("accounts/", include("allauth.urls")),
-    # Your stuff: custom urls includes go here
-]
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-# API URLS
-urlpatterns += [
-    # API base url
-    path("api/", include("config.api_router")),
-    # DRF auth token
-    path("auth-token/", obtain_auth_token),
+    path("api/v1/", include(router.urls)),
+    path("api-token-auth/", obtain_auth_token),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path(
         "api/docs/",
         SpectacularSwaggerView.as_view(url_name="api-schema"),
         name="api-docs",
     ),
+    # the 'api-root' from django rest-frameworks default router
+    # http://www.django-rest-framework.org/api-guide/routers/#defaultrouter
+    re_path(r"^$", RedirectView.as_view(url=reverse_lazy("api-root"), permanent=False)),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     if "debug_toolbar" in settings.INSTALLED_APPS:
