@@ -18,6 +18,7 @@ class UserViewSet(
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsUserOrReadOnly,)
+    lookup_field = 'uuid'
 
 
 class UserCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):

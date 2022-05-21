@@ -5,17 +5,12 @@ from django.urls import include, path, re_path, reverse_lazy
 from django.views.generic.base import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
-from rest_framework.routers import DefaultRouter
 
-from backend.users.views import UserCreateViewSet, UserViewSet
-
-router = DefaultRouter()
-router.register(r"users", UserViewSet)
-router.register(r"users", UserCreateViewSet)
+from backend.users.urls import urlpatterns as users_urlpatterns
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
-    path("api/v1/", include(router.urls)),
+    path("api/v1/", include(users_urlpatterns)),
     path("api-token-auth/", obtain_auth_token),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
