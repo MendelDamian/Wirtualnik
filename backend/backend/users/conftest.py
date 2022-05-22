@@ -2,20 +2,9 @@ from typing import Callable
 
 import pytest
 from django.forms.models import model_to_dict
-from rest_framework.test import APIClient
 
 from backend.users.models import User
 from backend.users.tests.factories import UserFactory
-
-
-@pytest.fixture(autouse=True)
-def media_storage(settings, tmpdir) -> None:
-    settings.MEDIA_ROOT = tmpdir.strpath
-
-
-@pytest.fixture
-def api_client() -> APIClient:
-    return APIClient()
 
 
 @pytest.fixture

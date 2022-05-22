@@ -13,7 +13,9 @@ def test_serializer_with_empty_data():
     assert serializer.is_valid() is False
 
 
-def test_serializer_with_valid_data(build_user: Callable[..., dict[str, any]]):
+def test_serializer_with_valid_data(
+    build_user: Callable[..., dict[str, any]]
+):
     user_data = {
         "username": "test_user",
         "first_name": "Test_first_name",
@@ -30,7 +32,9 @@ def test_serializer_with_valid_data(build_user: Callable[..., dict[str, any]]):
     assert user.email == user_data["email"]
 
 
-def test_serializer_hashes_password(build_user: Callable[..., dict[str, any]]):
+def test_serializer_hashes_password(
+    build_user: Callable[..., dict[str, any]]
+):
     user_data = build_user()
     serializer = CreateUserSerializer(data=user_data)
     assert serializer.is_valid() is True
