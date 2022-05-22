@@ -21,8 +21,9 @@ def test_model_with_creating_user_with_taken_username(
 ):
     username = "test_user"
 
-    make_user(username=username)
+    user = make_user(username=username)
     assert User.objects.count() == 1
+    assert str(user) == username
 
     make_user(username=username)
     assert User.objects.count() == 1
