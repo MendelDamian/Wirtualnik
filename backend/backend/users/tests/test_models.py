@@ -27,3 +27,18 @@ def test_model_with_creating_user_with_taken_username(
 
     make_user(username=username)
     assert User.objects.count() == 1
+
+
+def test_model_with_soft_delete(
+    make_user: Callable[..., User],
+):
+    user = make_user()
+    assert User.available_objects.count() == 1
+    assert User.objects.count() == 1
+    assert user.is_removed is False
+
+    user.delete()
+
+    assert User.available_objects.count() == 0
+    assert User.objects.count() == 1
+    assert user.is_removed is True

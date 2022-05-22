@@ -6,12 +6,13 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+from model_utils.models import SoftDeletableModel
 from rest_framework.authtoken.models import Token
 
 
-class User(AbstractUser):
+class User(AbstractUser, SoftDeletableModel):
     """
-    Custom user model.
+    Custom user model with soft delete.
     """
 
     # Join date.

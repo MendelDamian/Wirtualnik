@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from backend.users.models import User
+from ..models import User
 
 pytestmark = pytest.mark.django_db
 
@@ -26,6 +26,18 @@ def test_detail_view_with_invalid_uuid(
     api_client: APIClient,
 ):
     url = reverse("user-detail", kwargs={"uuid": "invalid"})
+    response = api_client.get(path=url)
+    assert response.status_code == 404
+
+
+def test_detail_view_with_soft_deleted_user(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    user = make_user()
+    user.delete()
+
+    url = reverse("user-detail", kwargs={"uuid": user.uuid})
     response = api_client.get(path=url)
     assert response.status_code == 404
 
@@ -103,7 +115,7 @@ def test_update_view_with_password(
     response = api_client.put(path=url, data=new_data)
     assert response.status_code == 200
 
-    user = User.objects.first()
+    user.refresh_from_db()
     assert user.check_password(new_data.get('password')) is False
 
 
@@ -123,6 +135,20 @@ def test_update_view_with_invalid_uuid(
     api_client: APIClient,
 ):
     url = reverse("user-detail", kwargs={"uuid": "invalid"})
+    response = api_client.put(path=url, data={"first_name": "new_first_name"})
+    assert response.status_code == 404
+
+
+def test_update_view_with_soft_deleted_user(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    user = make_user()
+    user.delete()
+
+    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
+
     response = api_client.put(path=url, data={"first_name": "new_first_name"})
     assert response.status_code == 404
 
@@ -242,4 +268,133 @@ def test_create_view_with_already_existing_username(
     make_user(**data)
     url = reverse("user-list")
     response = api_client.post(path=url, data=data)
+    assert response.status_code == 400
+
+
+def test_create_view_with_same_username_as_soft_deleted_user(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    """
+    This test is to ensure that the user is not created if the username is
+    already taken by a soft deleted user. This is to prevent the user from
+    being restored and to keep data clean.
+    """
+    data = {
+        "username": "some_username",
+        "password": "p@$$w0rD",
+    }
+
+    user = make_user(**data)
+    user.delete()
+
+    url = reverse("user-list")
+    response = api_client.post(path=url, data=data)
+    assert response.status_code == 400
+
+
+def test_destroy_view_with_valid_token(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    user = make_user()
+    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
+
+    response = api_client.delete(path=url)
+    assert response.status_code == 204
+
+    assert User.available_objects.count() == 0
+    assert User.objects.count() == 1
+
+
+def test_destroy_view_with_invalid_token(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    user = make_user()
+    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token invalid")
+
+    response = api_client.delete(path=url)
+    assert response.status_code == 403
+
+
+def test_destroy_view_with_already_soft_deleted_user(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    user = make_user()
+    user.delete()
+
+    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
+
+    response = api_client.delete(path=url)
+    assert response.status_code == 404
+
+
+def test_update_password_view_with_valid_token(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    data = {
+        "old_password": "0ld_p@$$w0rD",
+        "new_password": "N3w_p@$$w0rD",
+    }
+
+    user = make_user(password=data.get("old_password"))
+    url = reverse("change-password")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
+
+    response = api_client.put(path=url, data=data)
+    assert response.status_code == 204
+
+    user.refresh_from_db()
+    assert user.check_password(data.get('new_password')) is True
+
+
+def test_update_password_view_with_invalid_token(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    data = {
+        "old_password": "0ld_p@$$w0rD",
+        "new_password": "N3w_p@$$w0rD",
+    }
+
+    make_user(password=data.get("old_password"))
+    url = reverse("change-password")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token invalid")
+
+    response = api_client.put(path=url, data=data)
+    assert response.status_code == 403
+
+
+def test_update_password_view_with_invalid_old_password(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    data = {
+        "old_password": "1nc0r3cT_p@$$w0rD",
+        "new_password": "N3w_p@$$w0rD",
+    }
+
+    user = make_user(password="W31Rd_p@$$w0rD")
+    url = reverse("change-password")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
+
+    response = api_client.put(path=url, data=data)
+    assert response.status_code == 400
+
+
+def test_update_password_view_with_empty_data(
+    make_user: Callable[..., User],
+    api_client: APIClient,
+):
+    user = make_user()
+    url = reverse("change-password")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
+
+    response = api_client.put(path=url, data={})
     assert response.status_code == 400
