@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import UserViewSet, UserCreateViewSet, UpdatePasswordAPIView
 
-app_name = "users"
+app_name = "backend.users"
 
 router = DefaultRouter()
 router.register(r"users", UserViewSet)

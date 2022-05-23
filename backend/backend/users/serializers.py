@@ -6,6 +6,10 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for retrieve and update user endpoint.
+    """
+
     class Meta:
         model = User
         fields = (
@@ -21,6 +25,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for create user endpoint.
+    """
+
     def create(self, validated_data):
         # call create_user on user object. Without this
         # the password will be stored in plain text.
@@ -53,6 +61,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     """
     Serializer for password change endpoint.
     """
+
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 

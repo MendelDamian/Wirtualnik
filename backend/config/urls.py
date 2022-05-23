@@ -6,11 +6,9 @@ from django.views.generic.base import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
-from backend.users.urls import urlpatterns as users_urlpatterns
-
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
-    path("api/v1/", include(users_urlpatterns)),
+    path("api/v1/", include("backend.users.urls", namespace="users")),
     path("api-token-auth/", obtain_auth_token),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),

@@ -14,7 +14,7 @@ def test_detail_view_with_valid_uuid(
     api_client: APIClient,
 ):
     user = make_user()
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     response = api_client.get(path=url)
     assert response.status_code == 200
 
@@ -25,7 +25,7 @@ def test_detail_view_with_valid_uuid(
 def test_detail_view_with_invalid_uuid(
     api_client: APIClient,
 ):
-    url = reverse("user-detail", kwargs={"uuid": "invalid"})
+    url = reverse("users:user-detail", kwargs={"uuid": "invalid"})
     response = api_client.get(path=url)
     assert response.status_code == 404
 
@@ -37,7 +37,7 @@ def test_detail_view_with_soft_deleted_user(
     user = make_user()
     user.delete()
 
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     response = api_client.get(path=url)
     assert response.status_code == 404
 
@@ -60,7 +60,7 @@ def test_update_view_with_valid_uuid(
 
     user = make_user(**old_data)
 
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.put(path=url, data=new_data)
@@ -89,7 +89,7 @@ def test_update_view_with_invalid_data(
     }
 
     user = make_user(**old_data)
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.put(path=url, data=new_data)
@@ -109,7 +109,7 @@ def test_update_view_with_password(
     }
 
     user = make_user(**old_data)
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.put(path=url, data=new_data)
@@ -124,7 +124,7 @@ def test_update_view_with_invalid_token(
     api_client: APIClient,
 ):
     user = make_user(first_name="old_first_name")
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     api_client.credentials(HTTP_AUTHORIZATION=f"Token invalid")
 
     response = api_client.put(path=url, data={"first_name": "new_first_name"})
@@ -134,7 +134,7 @@ def test_update_view_with_invalid_token(
 def test_update_view_with_invalid_uuid(
     api_client: APIClient,
 ):
-    url = reverse("user-detail", kwargs={"uuid": "invalid"})
+    url = reverse("users:user-detail", kwargs={"uuid": "invalid"})
     response = api_client.put(path=url, data={"first_name": "new_first_name"})
     assert response.status_code == 404
 
@@ -146,7 +146,7 @@ def test_update_view_with_soft_deleted_user(
     user = make_user()
     user.delete()
 
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.put(path=url, data={"first_name": "new_first_name"})
@@ -164,7 +164,7 @@ def test_create_view_with_valid_data(
         "email": "new_email@example.com",
     }
 
-    url = reverse("user-list")
+    url = reverse("users:user-list")
     response = api_client.post(path=url, data=data)
     assert response.status_code == 201
 
@@ -196,7 +196,7 @@ def test_create_view_with_missing_password(
         "email": "new_email@example.com",
     }
 
-    url = reverse("user-list")
+    url = reverse("users:user-list")
     response = api_client.post(path=url, data=data)
     assert response.status_code == 400
 
@@ -212,7 +212,7 @@ def test_create_view_with_missing_username(
         "email": "new_email@example.com",
     }
 
-    url = reverse("user-list")
+    url = reverse("users:user-list")
     response = api_client.post(path=url, data=data)
     assert response.status_code == 400
 
@@ -228,7 +228,7 @@ def test_create_view_with_invalid_email(
         "email": "invalid",
     }
 
-    url = reverse("user-list")
+    url = reverse("users:user-list")
     response = api_client.post(path=url, data=data)
     assert response.status_code == 400
 
@@ -247,7 +247,7 @@ def test_create_view_with_forbidden_fields(
         "uuid": "some_uuid",
     }
 
-    url = reverse("user-list")
+    url = reverse("users:user-list")
     response = api_client.post(path=url, data=data)
     assert response.status_code == 201
 
@@ -266,7 +266,7 @@ def test_create_view_with_already_existing_username(
     }
 
     make_user(**data)
-    url = reverse("user-list")
+    url = reverse("users:user-list")
     response = api_client.post(path=url, data=data)
     assert response.status_code == 400
 
@@ -288,7 +288,7 @@ def test_create_view_with_same_username_as_soft_deleted_user(
     user = make_user(**data)
     user.delete()
 
-    url = reverse("user-list")
+    url = reverse("users:user-list")
     response = api_client.post(path=url, data=data)
     assert response.status_code == 400
 
@@ -298,7 +298,7 @@ def test_destroy_view_with_valid_token(
     api_client: APIClient,
 ):
     user = make_user()
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.delete(path=url)
@@ -313,7 +313,7 @@ def test_destroy_view_with_invalid_token(
     api_client: APIClient,
 ):
     user = make_user()
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     api_client.credentials(HTTP_AUTHORIZATION=f"Token invalid")
 
     response = api_client.delete(path=url)
@@ -327,7 +327,7 @@ def test_destroy_view_with_already_soft_deleted_user(
     user = make_user()
     user.delete()
 
-    url = reverse("user-detail", kwargs={"uuid": user.uuid})
+    url = reverse("users:user-detail", kwargs={"uuid": user.uuid})
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.delete(path=url)
@@ -344,7 +344,7 @@ def test_update_password_view_with_valid_token(
     }
 
     user = make_user(password=data.get("old_password"))
-    url = reverse("change-password")
+    url = reverse("users:change-password")
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.put(path=url, data=data)
@@ -364,7 +364,7 @@ def test_update_password_view_with_invalid_token(
     }
 
     make_user(password=data.get("old_password"))
-    url = reverse("change-password")
+    url = reverse("users:change-password")
     api_client.credentials(HTTP_AUTHORIZATION=f"Token invalid")
 
     response = api_client.put(path=url, data=data)
@@ -381,7 +381,7 @@ def test_update_password_view_with_invalid_old_password(
     }
 
     user = make_user(password="W31Rd_p@$$w0rD")
-    url = reverse("change-password")
+    url = reverse("users:change-password")
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.put(path=url, data=data)
@@ -393,7 +393,7 @@ def test_update_password_view_with_empty_data(
     api_client: APIClient,
 ):
     user = make_user()
-    url = reverse("change-password")
+    url = reverse("users:change-password")
     api_client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
     response = api_client.put(path=url, data={})

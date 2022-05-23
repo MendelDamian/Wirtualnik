@@ -25,3 +25,10 @@ def test_api_auth_token_with_invalid_data(
 ):
     response = api_client.post(path='/api-token-auth/', data={"username": "invalid", "password": "invalid"})
     assert response.status_code == 400
+
+
+def test_api_auth_token_with_empty_data(
+    api_client: APIClient,
+):
+    response = api_client.post(path='/api-token-auth/', data={})
+    assert response.status_code == 400
